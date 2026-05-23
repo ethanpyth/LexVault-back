@@ -16,12 +16,12 @@ enum Role {
 
 model Adresse {
   id         String      @id @default(uuid())
-  avenue     String
-  quartier   String
-  commune    String
-  ville      String
-  province   String
-  pays       String
+  avenue     String?
+  quartier   String?
+  commune    String?
+  ville      String?
+  province   String?
+  pays       String?
 
   personnes  Personne[]
 }
@@ -30,14 +30,14 @@ model Personne {
   id               String               @id @default(uuid())
   nom              String
   prenom           String
-  dateNaissance    DateTime
-  sexe             String
-  nationalite      String
+  dateNaissance    DateTime?
+  sexe             String?
+  nationalite      String?
   telephone        String?
   email            String?
 
   adresseId        String
-  adresse          Adresse             @relation(fields: [adresseId], references: [id])
+  adresse          Adresse?             @relation(fields: [adresseId], references: [id])
 
   user             User?
   casierJudiciaire CasierJudiciaire?
@@ -50,6 +50,7 @@ model User {
   role          Role
   isActive      Boolean              @default(true)
   lastLogin     DateTime?
+  createdAt     DateTime             @default(now())
 
   personneId    String               @unique
   personne      Personne             @relation(fields: [personneId], references: [id])
