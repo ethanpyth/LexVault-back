@@ -6,6 +6,8 @@ import { UsersModule } from './users/users.module';
 import { ConfigModule } from '@nestjs/config';
 import { PrismaModule } from './prisma/prisma.module';
 import { PersonsModule } from './persons/persons.module';
+import { FolderModule } from './folder/folder.module';
+import { TribunalsModule } from './tribunals/tribunals.module';
 
 @Module({
   imports: [
@@ -16,6 +18,8 @@ import { PersonsModule } from './persons/persons.module';
     UsersModule,
     PrismaModule,
     PersonsModule,
+    FolderModule,
+    TribunalsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

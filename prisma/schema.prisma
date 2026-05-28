@@ -1,9 +1,211 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
 datasource db {
   provider = "postgresql"
 }
 
-generator client {
-  provider = "prisma-client-js"
+enum Sexe {
+  Masculin
+  Feminin
+}
+
+model Adresse {
+  id        String   @id @default(uuid())
+  avenue    String?
+  quartier  String?
+  commune   String?
+  ville     String?
+  province  String?
+  pays      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+
+  personnes Personne[]
+}
+
+model Personne {
+  id               String            @id @default(uuid())
+  nom              String
+  prenom           String
+  dateNaissance    DateTime?
+  sexe             Sexe?
+  nationalite      String?
+  telephone        String?
+  email            String?
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @default(now()) @updatedAt
+  adresseId        String
+  casierJudiciaire CasierJudiciaire?
+  adresse          Adresse           @relation(fields: [adresseId], references: [id])
+  user             User?
+  audiences        Audience[]
+}
+
+model User {
+  id           String    @id @default(uuid())
+  username     String    @unique
+  passwordHash String
+  role         Role
+  isActive     Boolean   @default(true)
+  lastLogin    DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @default(now()) @updatedAt
+
+  personneId    String             @unique
+  audits        HistoriqueAction[]
+  notifications Notification[]
+  sessions      Session[]
+  audience      Audience[]
+  personne      Personne           @relation(fields: [personneId], references: [id])
+}
+
+model CasierJudiciaire {
+  id           String               @id @default(uuid())
+  numeroCasier String               @unique
+  statut       StatutCasier         @default(ACTIF)
+  dateCreation DateTime             @default(now())
+  createdAt    DateTime             @default(now())
+  updatedAt    DateTime             @default(now()) @updatedAt
+  personneId   String               @unique
+  personne     Personne             @relation(fields: [personneId], references: [id])
+  decisions    DecisionJudiciaire[]
+  infractions  Infraction[]
+  audiences    Audience[]
+}
+
+model Infraction {
+  id             String           @id @default(uuid())
+  qualification  String
+  articleViole   String
+  description    String?
+  gravite        String
+  dateInfraction DateTime
+  lieu           String?
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @default(now()) @updatedAt
+  casierId       String
+  casier         CasierJudiciaire @relation(fields: [casierId], references: [id])
+}
+
+model Tribunal {
+  id           String     @id @default(uuid())
+  nom          String
+  typeTribunal String
+  ville        String
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @default(now()) @updatedAt
+  audiences    Audience[]
+}
+
+model Audience {
+  id           String               @id @default(uuid())
+  dateAudience DateTime
+  salle        String?
+  jugeId       String
+  statut       StatutAudience
+  createdAt    DateTime             @default(now())
+  updatedAt    DateTime             @default(now()) @updatedAt
+  tribunalId   String
+  tribunal     Tribunal             @relation(fields: [tribunalId], references: [id])
+  casierId     String
+  casier       CasierJudiciaire     @relation(fields: [casierId], references: [id])
+  decisions    DecisionJudiciaire[]
+  documents    Document[]
+  personne     Personne             @relation(fields: [jugeId], references: [id])
+  user         User?                @relation(fields: [userId], references: [id])
+  userId       String?
+}
+
+model DecisionJudiciaire {
+  id           String           @id @default(uuid())
+  reference    String
+  contenu      String
+  dateDecision DateTime
+  typeDecision String
+  verdict      String
+  motivation   String
+  audienceId   String
+  casierId     String
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @default(now()) @updatedAt
+  audience     Audience         @relation(fields: [audienceId], references: [id])
+  casier       CasierJudiciaire @relation(fields: [casierId], references: [id])
+  sentence     Sentence?
+}
+
+model Sentence {
+  id            String    @id @default(uuid())
+  typeSentence  TypePeine
+  duree         Int?
+  montantAmende Float?
+  uniteDuree    String?
+  dateSentence  DateTime
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @default(now()) @updatedAt
+
+  decisionId String             @unique
+  decision   DecisionJudiciaire @relation(fields: [decisionId], references: [id])
+}
+
+model Document {
+  id         String   @id @default(uuid())
+  nomFichier String
+  typeMime   String
+  url        String
+  dateUpload DateTime @default(now())
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @default(now()) @updatedAt
+
+  audienceId String
+  audience   Audience @relation(fields: [audienceId], references: [id])
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  titre     String
+  message   String
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+}
+
+model HistoriqueAction {
+  id             String   @id @default(uuid())
+  action         String
+  entite         String
+  ancienneValeur String?
+  nouvelleValeur String?
+  adresseIP      String?
+  dateAction     DateTime @default(now())
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @default(now()) @updatedAt
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+}
+
+model Session {
+  id        String   @id @default(uuid())
+  token     String
+  ipAddress String
+  userAgent String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+
+  expiresAt DateTime
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+}
+
+model CasierCounter {
+  id    String @id @default(uuid())
+  year  Int
+  value Int    @default(0)
 }
 
 enum Role {
@@ -14,172 +216,20 @@ enum Role {
   ACCUSE
 }
 
-enum Sexe {
-  Masculin
-  Feminin
+enum StatutCasier {
+  ACTIF
+  SUSPENDU
+  ARCHIVE
 }
 
-model Adresse {
-  id         String      @id @default(uuid())
-  avenue     String?
-  quartier   String?
-  commune    String?
-  ville      String?
-  province   String?
-  pays       String?
-
-  personnes  Personne[]
+enum StatutAudience {
+  EN_ATTENTE
+  TERMINE
+  EN_COURS
 }
 
-model Personne {
-  id               String               @id @default(uuid())
-  nom              String
-  prenom           String
-  dateNaissance    DateTime?
-  sexe             Sexe?
-  nationalite      String?
-  telephone        String?
-  email            String?
-
-  adresseId        String
-  adresse          Adresse?             @relation(fields: [adresseId], references: [id])
-
-  user             User?
-  casierJudiciaire CasierJudiciaire?
-}
-
-model User {
-  id            String               @id @default(uuid())
-  username      String               @unique
-  passwordHash  String
-  role          Role
-  isActive      Boolean              @default(true)
-  lastLogin     DateTime?
-  createdAt     DateTime             @default(now())
-
-  personneId    String               @unique
-  personne      Personne             @relation(fields: [personneId], references: [id])
-
-  notifications Notification[]
-  sessions      Session[]
-  audits        HistoriqueAction[]
-}
-
-model CasierJudiciaire {
-  id               String                  @id @default(uuid())
-  numeroCasier     String                  @unique
-  statut           String
-  dateCreation     DateTime                @default(now())
-
-  personneId       String                  @unique
-  personne         Personne                @relation(fields: [personneId], references: [id])
-
-  infractions      Infraction[]
-  decisions        DecisionJudiciaire[]
-}
-
-model Infraction {
-  id               String                  @id @default(uuid())
-  qualification    String
-  description      String
-  dateInfraction   DateTime
-  lieu             String
-
-  casierId         String
-  casier           CasierJudiciaire       @relation(fields: [casierId], references: [id])
-}
-
-model Tribunal {
-  id               String                  @id @default(uuid())
-  nom              String
-  typeTribunal     String
-  ville            String
-
-  audiences        Audience[]
-}
-
-model Audience {
-  id               String                  @id @default(uuid())
-  dateAudience     DateTime
-  salle            String
-  statut           String
-
-  tribunalId       String
-  tribunal         Tribunal               @relation(fields: [tribunalId], references: [id])
-
-  documents        Document[]
-  decisions        DecisionJudiciaire[]
-}
-
-model DecisionJudiciaire {
-  id               String                  @id @default(uuid())
-  reference        String
-  contenu          String
-  dateDecision     DateTime
-
-  audienceId       String
-  audience         Audience               @relation(fields: [audienceId], references: [id])
-
-  casierId         String
-  casier           CasierJudiciaire       @relation(fields: [casierId], references: [id])
-
-  sentence         Sentence?
-}
-
-model Sentence {
-  id               String                  @id @default(uuid())
-  typeSentence     String
-  duree            Int?
-  montantAmende    Float?
-  dateSentence     DateTime
-
-  decisionId       String                  @unique
-  decision         DecisionJudiciaire     @relation(fields: [decisionId], references: [id])
-}
-
-model Document {
-  id               String                  @id @default(uuid())
-  nomFichier       String
-  typeMime         String
-  url              String
-  dateUpload       DateTime                @default(now())
-
-  audienceId       String
-  audience         Audience               @relation(fields: [audienceId], references: [id])
-}
-
-model Notification {
-  id               String                  @id @default(uuid())
-  titre            String
-  message          String
-  isRead           Boolean                 @default(false)
-  createdAt        DateTime                @default(now())
-
-  userId           String
-  user             User                    @relation(fields: [userId], references: [id])
-}
-
-model HistoriqueAction {
-  id               String                  @id @default(uuid())
-  action           String
-  entite           String
-  ancienneValeur   String?
-  nouvelleValeur   String?
-  adresseIP        String?
-  dateAction       DateTime                @default(now())
-
-  userId           String
-  user             User                    @relation(fields: [userId], references: [id])
-}
-
-model Session {
-  id               String                  @id @default(uuid())
-  token            String
-  ipAddress        String
-  userAgent        String
-  createdAt        DateTime                @default(now())
-  expiresAt        DateTime
-
-  userId           String
-  user             User                    @relation(fields: [userId], references: [id])
+enum TypePeine {
+  PRISON
+  SURSIS
+  AMENDE
 }

@@ -114,6 +114,8 @@ CREATE TABLE "DecisionJudiciaire" (
     "dateDecision" TIMESTAMP(3) NOT NULL,
     "audienceId" TEXT NOT NULL,
     "casierId" TEXT NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
 
     CONSTRAINT "DecisionJudiciaire_pkey" PRIMARY KEY ("id")
 );
@@ -125,6 +127,8 @@ CREATE TABLE "Sentence" (
     "duree" INTEGER,
     "montantAmende" DOUBLE PRECISION,
     "dateSentence" TIMESTAMP(3) NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
     "decisionId" TEXT NOT NULL,
 
     CONSTRAINT "Sentence_pkey" PRIMARY KEY ("id")
@@ -137,6 +141,8 @@ CREATE TABLE "Document" (
     "typeMime" TEXT NOT NULL,
     "url" TEXT NOT NULL,
     "dateUpload" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
     "audienceId" TEXT NOT NULL,
 
     CONSTRAINT "Document_pkey" PRIMARY KEY ("id")
@@ -149,6 +155,7 @@ CREATE TABLE "Notification" (
     "message" TEXT NOT NULL,
     "isRead" BOOLEAN NOT NULL DEFAULT false,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
     "userId" TEXT NOT NULL,
 
     CONSTRAINT "Notification_pkey" PRIMARY KEY ("id")
@@ -163,6 +170,8 @@ CREATE TABLE "HistoriqueAction" (
     "nouvelleValeur" TEXT,
     "adresseIP" TEXT,
     "dateAction" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
     "userId" TEXT NOT NULL,
 
     CONSTRAINT "HistoriqueAction_pkey" PRIMARY KEY ("id")
@@ -175,6 +184,7 @@ CREATE TABLE "Session" (
     "ipAddress" TEXT NOT NULL,
     "userAgent" TEXT NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
     "expiresAt" TIMESTAMP(3) NOT NULL,
     "userId" TEXT NOT NULL,
 
