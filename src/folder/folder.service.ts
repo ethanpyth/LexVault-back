@@ -1,6 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { CreateFolderDto } from './dto/create-folder.dto';
+import {
+  CreateCompleteFolderDto,
+  CreateFolderDto,
+} from './dto/create-folder.dto';
 
 @Injectable()
 export class FolderService {
@@ -47,6 +50,83 @@ export class FolderService {
       include: {
         personne: true,
       },
+    });
+  }
+
+  async createCompleteFolder(dto: CreateCompleteFolderDto) {
+    const numeroCasier = await this.generateUniqueFolderNumber();
+
+    return this.prisma.$transaction(async (tx) => {
+      const person = await tx.personne.create({
+        data: {
+          nom: dto.person.nom,
+          prenom: dto.person.prenom,
+          dateNaissance: dto.person.date_naissance,
+          adresse: {
+            create: {
+              avenue: dto.person.avenue,
+              ville: dto.person.ville,
+              pays: dto.person.pays,
+              commune: dto.person.commune,
+            },
+          },
+        },
+      });
+
+      const { ...folderData } = dto.folder;
+
+      const folder = await tx.casierJudiciaire.create({
+        data: {
+          ...folderData,
+          numeroCasier,
+          personneId: person.id,
+        },
+      });
+
+      await tx.infraction.createMany({
+        data: dto.infractions.map(({ ...infraction }) => ({
+          ...infraction,
+          casierId: folder.id,
+        })),
+      });
+
+      const audience = await tx.audience.create({
+        data: {
+          ...dto.audiences,
+          casierId: folder.id,
+          tribunalId: dto.audiences.tribunalId,
+        },
+      });
+
+      const { motif, ...decisionData } = dto.decisions;
+
+      const decision = await tx.decisionJudiciaire.create({
+        data: {
+          ...decisionData,
+          casierId: folder.id,
+          audienceId: audience.id,
+          motivation: motif,
+        },
+      });
+
+      const sentence = await tx.sentence.create({
+        data: {
+          typeSentence: dto.sentences.typeSentence,
+          dateSentence: dto.sentences.dateSentence,
+          uniteDuree: dto.sentences.uniteDuree,
+          duree: dto.sentences.duree,
+          montantAmende: dto.sentences.montant,
+          decisionId: decision.id,
+        },
+      });
+
+      return {
+        person,
+        folder,
+        audience,
+        decision,
+        sentence,
+      };
     });
   }
 

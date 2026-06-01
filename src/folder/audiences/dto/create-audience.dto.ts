@@ -5,7 +5,7 @@ export class CreateAudienceDto {
   dateAudience!: string;
 
   @IsEnum(['EN_COURS', 'TERMINE', 'EN_ATTENTE'])
-  statut!: 'EN_COURS' | 'TERMINE';
+  statut!: 'EN_COURS' | 'TERMINE' | 'EN_ATTENTE';
 
   @IsString()
   folderId!: string;

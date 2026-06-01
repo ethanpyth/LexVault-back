@@ -1,23 +1,31 @@
 import { Body, Controller, Get, Post } from '@nestjs/common';
 import { FolderService } from './folder.service';
-import { CreateFolderDto } from './dto/create-folder.dto';
+import {
+  CreateCompleteFolderDto,
+  CreateFolderDto,
+} from './dto/create-folder.dto';
 
 @Controller('folder')
 export class FolderController {
-  constructor(private readonly folderService: FolderService) {}
+  constructor(private readonly service: FolderService) {}
 
   @Post()
   create(@Body() createFolderDto: CreateFolderDto) {
-    return this.folderService.createFolder(createFolderDto);
+    return this.service.createFolder(createFolderDto);
+  }
+
+  @Post('all')
+  createAll(@Body() dto: CreateCompleteFolderDto) {
+    return this.service.createCompleteFolder(dto);
   }
 
   @Get()
   findAll() {
-    return this.folderService.getFolders();
+    return this.service.getFolders();
   }
 
   @Get(':id')
   getById(id: string) {
-    return this.folderService.getFolderById(id);
+    return this.service.getFolderById(id);
   }
 }
