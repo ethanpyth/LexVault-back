@@ -1,9 +1,5 @@
 import { IsNotEmpty, IsObject, IsString } from 'class-validator';
 import { CreatePersonDto } from '../../persons/dto/create-person.dto';
-import { CreateSentenceDto } from '../sentences/dto/create-sentence.dto';
-import { CreateInfractionDto } from '../infractions/dto/create-infraction.dto';
-import { CreateAudienceDto } from '../audiences/dto/create-audience.dto';
-import { CreateDecisionsDto } from '../decisions/dto/create-decisions.dto';
 
 export class CreateFolderDto {
   @IsString()
@@ -15,17 +11,39 @@ export class CreateCompleteFolderDto {
   person!: CreatePersonDto;
 
   @IsObject()
-  sentences!: CreateSentenceDto;
-
-  @IsObject()
-  folder!: CreateFolderDto;
+  @IsNotEmpty()
+  sentences!: {
+    typeSentence: 'PRISON' | 'SURSIS' | 'AMENDE' | 'TRAVAUX';
+    duree: number;
+    montant: number;
+    uniteDuree: string;
+    dateSentence: string;
+  };
 
   @IsNotEmpty()
-  infractions!: CreateInfractionDto[];
+  infractions!: {
+    qualification: string;
+    articleViole: string;
+    gravite: string;
+    dateInfraction: string | Date;
+  }[];
 
   @IsObject()
-  audiences!: CreateAudienceDto;
+  @IsNotEmpty()
+  audiences!: {
+    dateAudience: string;
+    statut: 'EN_COURS' | 'TERMINE' | 'EN_ATTENTE';
+    tribunalId: string;
+    jugeId: string;
+  };
 
   @IsObject()
-  decisions!: CreateDecisionsDto;
+  decisions!: {
+    reference: string;
+    dateDecision: string;
+    contenu: string;
+    typeDecision: string;
+    verdict: string;
+    motif: string;
+  };
 }

@@ -15,10 +15,18 @@ export class FolderService {
 
   async generateUniqueFolderNumber(): Promise<string> {
     const year = new Date().getFullYear();
+    let counter;
 
-    let counter = await this.prisma.casierCounter.findFirst({
-      where: { year },
-    });
+    console.log('BEFORE QUERY');
+    try {
+      counter = await this.prisma.casierCounter.findFirst({
+        where: { year },
+      });
+    } catch (error) {
+      console.error('DATABASE ERROR', error);
+    }
+
+    console.log('AFTER QUERY');
 
     if (counter) {
       counter = await this.prisma.casierCounter.update({
@@ -30,6 +38,10 @@ export class FolderService {
         data: { year, value: 1 },
       });
     }
+
+    const folderNumber = this.formatFolderNumber(year, counter.value);
+
+    console.log('Generated folder number:', folderNumber);
 
     return this.formatFolderNumber(year, counter.value);
   }
@@ -54,6 +66,11 @@ export class FolderService {
   }
 
   async createCompleteFolder(dto: CreateCompleteFolderDto) {
+    console.log('======================');
+    console.log('POST /folder/all');
+    console.log(dto);
+    console.log('======================');
+
     const numeroCasier = await this.generateUniqueFolderNumber();
 
     return this.prisma.$transaction(async (tx) => {
@@ -73,19 +90,17 @@ export class FolderService {
         },
       });
 
-      const { ...folderData } = dto.folder;
-
       const folder = await tx.casierJudiciaire.create({
         data: {
-          ...folderData,
           numeroCasier,
           personneId: person.id,
         },
       });
 
       await tx.infraction.createMany({
-        data: dto.infractions.map(({ ...infraction }) => ({
+        data: dto.infractions.map(({ dateInfraction, ...infraction }) => ({
           ...infraction,
+          ...(dateInfraction && { dateInfraction: new Date(dateInfraction) }),
           casierId: folder.id,
         })),
       });
@@ -93,16 +108,18 @@ export class FolderService {
       const audience = await tx.audience.create({
         data: {
           ...dto.audiences,
+          dateAudience: new Date(dto.audiences.dateAudience),
           casierId: folder.id,
           tribunalId: dto.audiences.tribunalId,
         },
       });
 
-      const { motif, ...decisionData } = dto.decisions;
+      const { motif, dateDecision, ...decisionData } = dto.decisions;
 
       const decision = await tx.decisionJudiciaire.create({
         data: {
           ...decisionData,
+          dateDecision: new Date(dateDecision),
           casierId: folder.id,
           audienceId: audience.id,
           motivation: motif,
@@ -112,7 +129,7 @@ export class FolderService {
       const sentence = await tx.sentence.create({
         data: {
           typeSentence: dto.sentences.typeSentence,
-          dateSentence: dto.sentences.dateSentence,
+          dateSentence: new Date(dto.sentences.dateSentence),
           uniteDuree: dto.sentences.uniteDuree,
           duree: dto.sentences.duree,
           montantAmende: dto.sentences.montant,
