@@ -1,9 +1,11 @@
-import { Body, Controller, Get, Post } from '@nestjs/common';
+import { Body, Controller, Get, Post, Query } from '@nestjs/common';
 import { FolderService } from './folder.service';
 import {
   CreateCompleteFolderDto,
   CreateFolderDto,
 } from './dto/create-folder.dto';
+import { PaginationDto } from './dto/pagination.dto';
+import { FilterDto } from './dto/filter.dto';
 
 @Controller('folder')
 export class FolderController {
@@ -20,8 +22,8 @@ export class FolderController {
   }
 
   @Get()
-  findAll() {
-    return this.service.getFolders();
+  findAll(@Query() dto: PaginationDto, @Query() filters: FilterDto) {
+    return this.service.getFolders(dto, filters);
   }
 
   @Get(':id')

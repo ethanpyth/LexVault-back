@@ -4,6 +4,8 @@ import {
   CreateCompleteFolderDto,
   CreateFolderDto,
 } from './dto/create-folder.dto';
+import { PaginationDto } from './dto/pagination.dto';
+import { Prisma } from '@prisma/client';
 
 @Injectable()
 export class FolderService {
@@ -66,11 +68,6 @@ export class FolderService {
   }
 
   async createCompleteFolder(dto: CreateCompleteFolderDto) {
-    console.log('======================');
-    console.log('POST /folder/all');
-    console.log(dto);
-    console.log('======================');
-
     const numeroCasier = await this.generateUniqueFolderNumber();
 
     return this.prisma.$transaction(async (tx) => {
@@ -147,12 +144,71 @@ export class FolderService {
     });
   }
 
-  async getFolders() {
-    return this.prisma.casierJudiciaire.findMany({
+  async getFolders(dto: PaginationDto, filters: Filters) {
+    const page = dto.page ?? 1;
+    const pageSize = dto.pageSize ?? 10;
+
+    const skip = (page - 1) * pageSize;
+
+    const where: Prisma.PersonneWhereInput = {};
+
+    if (filters.firstName?.trim()) {
+      where.nom = {
+        contains: filters.firstName,
+        mode: 'insensitive',
+      };
+    }
+
+    if (filters.lastName?.trim()) {
+      where.prenom = {
+        contains: filters.lastName,
+        mode: 'insensitive',
+      };
+    }
+
+    if (filters.nin?.trim()) {
+      where.nin = {
+        contains: filters.nin,
+      };
+    }
+
+    if (filters.birthday?.trim()) {
+      where.dateNaissance = new Date(filters.birthday);
+    }
+
+    const cjWhere: Prisma.CasierJudiciaireWhereInput = {};
+
+    if (Object.keys(where).length > 0) {
+      cjWhere.personne = where;
+    }
+
+    const data = await this.prisma.casierJudiciaire.findMany({
+      where: cjWhere,
+      skip,
+      take: pageSize,
+      orderBy: {
+        createdAt: 'desc',
+      },
       include: {
         personne: true,
       },
     });
+
+    const total = await this.prisma.casierJudiciaire.count({
+      where: cjWhere,
+    });
+
+    return {
+      data,
+      meta: {
+        page,
+        pageSize,
+        total,
+        pageCount: Math.ceil(total / pageSize),
+        hasNext: page * pageSize < total,
+        hasPrevious: page > 1,
+      },
+    };
   }
 
   async getFolderById(id: string) {
@@ -180,3 +236,10 @@ export class FolderService {
     });
   }
 }
+
+type Filters = {
+  firstName?: string;
+  lastName?: string;
+  birthday?: string;
+  nin?: string;
+};
