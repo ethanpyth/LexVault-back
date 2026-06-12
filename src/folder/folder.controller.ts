@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post, Query } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Query } from '@nestjs/common';
 import { FolderService } from './folder.service';
 import {
   CreateCompleteFolderDto,
@@ -26,8 +26,13 @@ export class FolderController {
     return this.service.getFolders(dto, filters);
   }
 
-  @Get(':id')
-  getById(id: string) {
+  @Get('id/:id')
+  getById(@Param('id') id: string) {
     return this.service.getFolderById(id);
+  }
+
+  @Get(':cjNumber')
+  getByCJNumber(@Param('cjNumber') cjNumber: string) {
+    return this.service.getFolderByCJNumber(cjNumber);
   }
 }

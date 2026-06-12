@@ -211,6 +211,20 @@ export class FolderService {
     };
   }
 
+  async getFolderByCJNumber(cjNumber: string) {
+    return this.prisma.casierJudiciaire.findUnique({
+      where: {
+        numeroCasier: cjNumber,
+      },
+      include: {
+        personne: true,
+        infractions: true,
+        audiences: true,
+        decisions: true,
+      },
+    });
+  }
+
   async getFolderById(id: string) {
     return this.prisma.casierJudiciaire.findUnique({
       where: { id },
