@@ -2,6 +2,7 @@ import { ConflictException, Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import bcrypt from 'bcrypt';
+import { PaginationDto } from '../folder/dto/pagination.dto';
 
 @Injectable()
 export class UsersService {
@@ -57,6 +58,38 @@ export class UsersService {
         personne: true,
       },
     });
+  }
+
+  async findUsersPerPage(dto: PaginationDto) {
+    const page = dto.page ?? 1;
+    const pageSize = dto.pageSize ?? 10;
+
+    const skip = (page - 1) * pageSize;
+
+    const data = await this.prisma.user.findMany({
+      include: {
+        personne: true,
+      },
+      skip,
+      take: pageSize,
+      orderBy: {
+        createdAt: 'desc',
+      },
+    });
+
+    const total = data.length;
+
+    console.log(data);
+
+    return {
+      data,
+      meta: {
+        page,
+        pageSize,
+        total,
+        pageCount: Math.ceil(total / pageSize),
+      },
+    };
   }
 
   async findById(id: string) {

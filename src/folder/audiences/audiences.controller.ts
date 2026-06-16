@@ -4,7 +4,7 @@ import { CreateAudienceDto } from './dto/create-audience.dto';
 
 @Controller('audiences')
 export class AudiencesController {
-  constructor(private audiencesService: AudiencesService) {}
+  constructor(private readonly audiencesService: AudiencesService) {}
 
   @Post()
   create(@Body() dto: CreateAudienceDto) {
