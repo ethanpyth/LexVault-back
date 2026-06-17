@@ -3,7 +3,6 @@ import { PrismaService } from '../prisma/prisma.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import bcrypt from 'bcrypt';
 import { PaginationDto } from '../folder/dto/pagination.dto';
-import { not } from 'supertest/lib/cookies';
 
 @Injectable()
 export class UsersService {
@@ -130,4 +129,10 @@ export class UsersService {
       },
     });
   }
+
+  // async findByRole(role: string) {
+  //   return this.prisma.user.findMany({
+  //     where: { role: role.toLocaleUpperCase() },
+  //   });
+  // }
 }

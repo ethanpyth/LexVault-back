@@ -6,10 +6,16 @@ import {
 } from './dto/create-folder.dto';
 import { PaginationDto } from './dto/pagination.dto';
 import { Prisma } from '@prisma/client';
+import { AuditService } from '../audit/audit.service';
+import { NotificationsService } from '../notifications/notifications.service';
 
 @Injectable()
 export class FolderService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly audit: AuditService,
+    private readonly notification: NotificationsService,
+  ) {}
 
   private formatFolderNumber(year: number, counter: number) {
     return `CJ-${year}-${String(counter).padStart(6, '0')}`;
@@ -50,6 +56,19 @@ export class FolderService {
 
   async createFolder(dto: CreateFolderDto) {
     const numeroCasier = await this.generateUniqueFolderNumber();
+
+    const adminIds = await this.prisma.user.findMany({
+      where: { role: 'ADMIN' },
+    });
+
+    adminIds.map(
+      async (id) =>
+        await this.notification.notify({
+          userId: id.id,
+          titre: 'Archivage',
+          message: 'Le casier ' + numeroCasier + ' a crée le dossier.',
+        }),
+    );
 
     return this.prisma.casierJudiciaire.create({
       data: {
@@ -241,13 +260,47 @@ export class FolderService {
     });
   }
 
-  async archive(id: string) {
-    return this.prisma.casierJudiciaire.update({
+  async archive(id: string, userId: string) {
+    const oldCasier = await this.prisma.casierJudiciaire.findUnique({
+      where: { id },
+    });
+
+    const casier = await this.prisma.casierJudiciaire.update({
       where: { id },
       data: {
         statut: 'ARCHIVE',
       },
     });
+
+    await this.audit.log({
+      userId: userId,
+      action: 'ARCHIVE',
+      entite: 'CASIER',
+      entiteId: casier.numeroCasier,
+      ancienneValeur: oldCasier,
+      nouvelleValeur: casier,
+    });
+
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      include: { personne: true },
+    });
+
+    const adminIds = await this.prisma.user.findMany({
+      where: { role: 'ADMIN' },
+    });
+
+    adminIds.map(
+      async (id) =>
+        await this.notification.notify({
+          userId: id.id,
+          titre: 'Archivage',
+          message:
+            user?.personne.nom + ' a archivé le dossier ' + casier.numeroCasier,
+        }),
+    );
+
+    return casier;
   }
 }
 
