@@ -82,7 +82,7 @@ export class UsersService {
 
     const total = data.length;
 
-    console.log(data);
+    console.log(data.length);
 
     return {
       data,

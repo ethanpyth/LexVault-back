@@ -217,6 +217,12 @@ export class FolderService {
       where: cjWhere,
     });
 
+    // await this.audit.log({
+    //   userId: ,
+    //   action: 'READ',
+    //   entite: 'FOLDER',
+    // })
+
     return {
       data,
       meta: {

@@ -3,6 +3,8 @@ import { PrismaService } from '../prisma/prisma.service';
 import { CreateAuditDto } from './dto/create-audit.dto';
 import { Response } from 'express';
 import PDFDocument from 'pdfkit';
+import { PaginationDto } from '../folder/dto/pagination.dto';
+import { FilterDTO } from './dto/filter.dto';
 
 @Injectable()
 export class AuditService {
@@ -24,6 +26,53 @@ export class AuditService {
         adresseIP: dto.ip,
       },
     });
+  }
+
+  async getAll() {
+    return await this.prisma.historiqueAction.findMany();
+  }
+
+  async getPerPage(dto: PaginationDto, filter: FilterDTO) {
+    const page = dto.page ?? 1;
+    const pageSize = dto.pageSize ?? 10;
+
+    const skip = (page - 1) * pageSize;
+
+    const today = new Date();
+
+    const dayFrom = new Date(today.getDate() - Number(filter.period));
+
+    const result = await this.prisma.historiqueAction.findMany({
+      where: {
+        action: filter.typeAction,
+        userId: filter.userId,
+        createdAt: { lte: dayFrom, gte: today },
+      },
+      take: dto.pageSize,
+      skip,
+      orderBy: {
+        dateAction: 'desc',
+      },
+      include: {
+        user: {
+          select: {
+            id: true,
+            username: true,
+            role: true,
+          },
+        },
+      },
+    });
+
+    return {
+      data: result,
+      meta: {
+        page: dto.page,
+        pageSize: dto.pageSize,
+        pageCount: Math.ceil(result.length / pageSize),
+        total: result.length,
+      },
+    };
   }
 
   async exportPdf(res: Response) {
