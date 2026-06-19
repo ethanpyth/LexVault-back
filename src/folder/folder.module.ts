@@ -7,6 +7,11 @@ import { AudiencesModule } from './audiences/audiences.module';
 import { DecisionsModule } from './decisions/decisions.module';
 import { SentencesModule } from './sentences/sentences.module';
 import { TribunalsModule } from '../tribunals/tribunals.module';
+import { AuditModule } from '../audit/audit.module';
+import { AuditService } from '../audit/audit.service';
+import { PrismaService } from '../prisma/prisma.service';
+import { NotificationsModule } from '../notifications/notifications.module';
+import { NotificationsService } from '../notifications/notifications.service';
 
 @Module({
   imports: [
@@ -16,8 +21,10 @@ import { TribunalsModule } from '../tribunals/tribunals.module';
     DecisionsModule,
     SentencesModule,
     TribunalsModule,
+    AuditModule,
+    NotificationsModule,
   ],
   controllers: [FolderController],
-  providers: [FolderService],
+  providers: [FolderService, AuditService, PrismaService, NotificationsService],
 })
 export class FolderModule {}
