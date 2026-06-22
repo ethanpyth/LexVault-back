@@ -163,7 +163,7 @@ export class FolderService {
     });
   }
 
-  async getFolders(dto: PaginationDto, filters: Filters) {
+  async getFolders(dto: PaginationDto, filters: Filters, user: any) {
     const page = dto.page ?? 1;
     const pageSize = dto.pageSize ?? 10;
 
@@ -217,11 +217,11 @@ export class FolderService {
       where: cjWhere,
     });
 
-    // await this.audit.log({
-    //   userId: ,
-    //   action: 'READ',
-    //   entite: 'FOLDER',
-    // })
+    await this.audit.log({
+      userId: user.id,
+      action: 'READ',
+      entite: 'FOLDER',
+    });
 
     return {
       data,

@@ -130,6 +130,20 @@ export class UsersService {
     });
   }
 
+  async getCurrentUser(user: any) {
+    const result = await this.prisma.user.findUnique({
+      where: {
+        id: user.userId,
+      },
+      include: {
+        personne: true,
+      },
+    });
+
+    console.log(result);
+    return result;
+  }
+
   // async findByRole(role: string) {
   //   return this.prisma.user.findMany({
   //     where: { role: role.toLocaleUpperCase() },
