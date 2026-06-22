@@ -1,4 +1,12 @@
-import { Body, Controller, Get, Param, Post, Query } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Post,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
 import { FolderService } from './folder.service';
 import {
   CreateCompleteFolderDto,
@@ -7,11 +15,17 @@ import {
 import { PaginationDto } from './dto/pagination.dto';
 import { FilterDto } from './dto/filter.dto';
 import { CurrentUser } from '../auth/interfaces/auth-user.interface';
+import { Role } from '@prisma/client';
+import { Roles } from '../auth/decorators/auth.decorator';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../auth/guards/roles.guard';
 
 @Controller('folder')
 export class FolderController {
   constructor(private readonly service: FolderService) {}
 
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.GREFFIER)
   @Post()
   create(@Body() createFolderDto: CreateFolderDto) {
     return this.service.createFolder(createFolderDto);
