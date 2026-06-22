@@ -6,6 +6,7 @@ import {
 } from './dto/create-folder.dto';
 import { PaginationDto } from './dto/pagination.dto';
 import { FilterDto } from './dto/filter.dto';
+import { CurrentUser } from '../auth/interfaces/auth-user.interface';
 
 @Controller('folder')
 export class FolderController {
@@ -22,8 +23,12 @@ export class FolderController {
   }
 
   @Get()
-  findAll(@Query() dto: PaginationDto, @Query() filters: FilterDto) {
-    return this.service.getFolders(dto, filters);
+  findAll(
+    @Query() dto: PaginationDto,
+    @Query() filters: FilterDto,
+    @CurrentUser() user: any,
+  ) {
+    return this.service.getFolders(dto, filters, user);
   }
 
   @Get('id/:id')

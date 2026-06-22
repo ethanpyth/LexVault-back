@@ -33,6 +33,7 @@ export class AuditService {
   }
 
   async getPerPage(dto: PaginationDto, filter: FilterDTO) {
+    console.log(filter);
     const page = dto.page ?? 1;
     const pageSize = dto.pageSize ?? 10;
 
@@ -40,37 +41,49 @@ export class AuditService {
 
     const today = new Date();
 
-    const dayFrom = new Date(today.getDate() - Number(filter.period));
+    const dayFrom = new Date();
+    dayFrom.setDate(today.getDate() - Number(filter.period || 7));
+
+    const where: any = {
+      createdAt: {
+        gte: dayFrom,
+        lte: today,
+      },
+    };
+
+    if (filter.typeAction) {
+      where.action = filter.typeAction;
+    }
+
+    if (filter.userId) {
+      where.userId = filter.userId;
+    }
 
     const result = await this.prisma.historiqueAction.findMany({
-      where: {
-        action: filter.typeAction,
-        userId: filter.userId,
-        createdAt: { lte: dayFrom, gte: today },
-      },
+      where,
       take: dto.pageSize,
       skip,
       orderBy: {
         dateAction: 'desc',
       },
       include: {
-        user: {
-          select: {
-            id: true,
-            username: true,
-            role: true,
-          },
-        },
+        user: true,
       },
     });
+
+    const total = await this.prisma.historiqueAction.count({
+      where,
+    });
+
+    console.log(result);
 
     return {
       data: result,
       meta: {
         page: dto.page,
         pageSize: dto.pageSize,
-        pageCount: Math.ceil(result.length / pageSize),
-        total: result.length,
+        pageCount: Math.ceil(total / pageSize),
+        total: total,
       },
     };
   }
